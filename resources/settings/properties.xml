@@ -1,0 +1,6 @@
+<properties>
+    <property id="OwmApiKey" type="string">767c5a6ab53c51d09cbc74d3adc63a3f</property>
+    <property id="UseCelsius" type="boolean">true</property>
+    <property id="IsraelTimezoneOffset" type="number">3</property>
+    <property id="WeatherUpdateInterval" type="number">20</property>
+</properties>

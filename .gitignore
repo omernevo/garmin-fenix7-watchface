@@ -1,0 +1,11 @@
+# Connect IQ compiler output
+bin/
+gen/
+*.prg
+*.iq
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+*.bak
+.system_generated/

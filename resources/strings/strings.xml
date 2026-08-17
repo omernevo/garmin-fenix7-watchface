@@ -1,0 +1,11 @@
+<strings>
+    <string id="AppName">Fenix 7 Pro Digital</string>
+    <string id="PropOwmApiKey">OpenWeatherMap API Key</string>
+    <string id="PropOwmApiKeyDesc">Your API Key for OpenWeatherMap</string>
+    <string id="PropUseCelsius">Use Celsius (°C)</string>
+    <string id="PropUseCelsiusDesc">Display temperature in Celsius</string>
+    <string id="PropIsraelTimezoneOffset">Israel Timezone UTC Offset</string>
+    <string id="PropIsraelTimezoneOffsetDesc">UTC offset in hours for Israel time (e.g. 3 for UTC+3 during Summer / DST, 2 for Winter)</string>
+    <string id="PropWeatherUpdateInterval">Weather Refresh Interval (min)</string>
+    <string id="PropWeatherUpdateIntervalDesc">Frequency of weather background updates in minutes</string>
+</strings>

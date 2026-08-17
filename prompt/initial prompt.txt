@@ -1,0 +1,33 @@
+Your job is to generate a watchface compatible with Garmin Fenix 7. It may work on other Garmin watches but optimization should be done for the Fenix 7.
+
+The template is in a photo in the /prompt folder. Whenever information or instructions are missing, you may simply copy the template.
+
+Design: Copy the template. 
+- Seconds are to be shown only when the screen is in active mode (first photo). In rest mode, a line should appear (second photo).
+
+Data fields - generally follow the template.
+Circle, starting from top and going clockwise:
+- Wind + wind direction from Garmin
+- Precipitation + rain in the next hour from OWM
+- Total steps in the calendaric week (starting Monday)
+- Date (DAY MM D)
+- KM cycling this calendaric wek (starting Monday)
+- Time in Israel
+
+Fields above time:
+-Center top: current temp from OWM
+- Left: elevation (with icon on top)
+- Center: min/max temp from owm (with icon on top)
+- next sun event (with icon on top)
+
+Fields under time:
+- left: total intensity min this calendaric week (starting Monday) (with icon on underneath)
+- center: current heart rate (with icon on underneath)
+- total steps tody (with icon on underneath)
+- bottom under heart icon: average resting heart rate past 7 days
+
+Icons: generate graphically similar icons
+
+OWM API: 767c5a6ab53c51d09cbc74d3adc63a3f
+
+

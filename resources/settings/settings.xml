@@ -1,0 +1,14 @@
+<settings>
+    <setting propertyKey="@Properties.OwmApiKey" title="@Strings.PropOwmApiKey" prompt="@Strings.PropOwmApiKeyDesc">
+        <settingConfig type="alphaNumeric" />
+    </setting>
+    <setting propertyKey="@Properties.UseCelsius" title="@Strings.PropUseCelsius" prompt="@Strings.PropUseCelsiusDesc">
+        <settingConfig type="boolean" />
+    </setting>
+    <setting propertyKey="@Properties.IsraelTimezoneOffset" title="@Strings.PropIsraelTimezoneOffset" prompt="@Strings.PropIsraelTimezoneOffsetDesc">
+        <settingConfig type="numeric" />
+    </setting>
+    <setting propertyKey="@Properties.WeatherUpdateInterval" title="@Strings.PropWeatherUpdateInterval" prompt="@Strings.PropWeatherUpdateIntervalDesc">
+        <settingConfig type="numeric" />
+    </setting>
+</settings>
