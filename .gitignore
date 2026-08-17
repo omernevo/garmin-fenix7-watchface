@@ -4,6 +4,11 @@ gen/
 *.prg
 *.iq
 
+# Private Developer Key
+*.der
+*.pem
+developer_key.der
+
 # OS & Editor files
 .DS_Store
 Thumbs.db
