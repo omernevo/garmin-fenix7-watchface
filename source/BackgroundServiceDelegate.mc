@@ -65,7 +65,21 @@ class BackgroundServiceDelegate extends System.ServiceDelegate {
         if (responseCode == 200 && data != null) {
             var weatherDict = {} as Lang.Dictionary;
 
-            // Current temperature
+            // Weather condition (e.g. Clear, Clouds, Rain, Snow, Thunderstorm)
+            if (data.hasKey("weather")) {
+                var weatherArr = data.get("weather") as Lang.Array;
+                if (weatherArr != null && weatherArr.size() > 0) {
+                    var w0 = weatherArr[0] as Lang.Dictionary;
+                    if (w0.hasKey("main")) {
+                        weatherDict.put("condition", w0.get("main"));
+                    }
+                    if (w0.hasKey("id")) {
+                        weatherDict.put("conditionId", w0.get("id"));
+                    }
+                }
+            }
+
+            // Current temperature & min/max
             if (data.hasKey("main")) {
                 var main = data.get("main") as Lang.Dictionary;
                 if (main.hasKey("temp")) {

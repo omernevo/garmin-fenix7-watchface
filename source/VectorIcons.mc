@@ -10,94 +10,147 @@ class VectorIcons {
         dc.setPenWidth(1);
 
         var peak1 = [
-            [x, y - 6],
-            [x - 8, y + 5],
-            [x + 5, y + 5]
+            [x, y - 5],
+            [x - 6, y + 4],
+            [x + 4, y + 4]
         ];
         dc.fillPolygon(peak1);
 
         var peak2 = [
-            [x + 4, y - 3],
-            [x - 2, y + 5],
-            [x + 8, y + 5]
+            [x + 3, y - 2],
+            [x - 1, y + 4],
+            [x + 7, y + 4]
         ];
         dc.fillPolygon(peak2);
 
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-        dc.drawLine(x - 2, y - 1, x + 2, y + 2);
+        dc.drawLine(x - 2, y, x + 2, y + 2);
     }
 
-    // 2. Weather Cloud Icon (OWM Min/Max)
-    static function drawWeatherCloud(dc as Graphics.Dc, x as Lang.Number, y as Lang.Number, color as Lang.Number) as Void {
+    // 2. Dynamic Weather Condition Icon (OWM: Clear, Clouds, Rain, Snow, Thunderstorm, Mist)
+    static function drawWeatherCondition(dc as Graphics.Dc, x as Lang.Number, y as Lang.Number, condition as Lang.String?, color as Lang.Number) as Void {
         dc.setColor(color, Graphics.COLOR_TRANSPARENT);
 
-        dc.fillCircle(x - 4, y + 1, 5);
-        dc.fillCircle(x + 2, y, 6);
-        dc.fillCircle(x + 7, y + 2, 4);
-        dc.fillRectangle(x - 4, y + 2, 12, 4);
+        if (condition == null) {
+            condition = "Clouds";
+        }
 
-        dc.drawCircle(x - 6, y - 3, 2);
+        if (condition.equals("Clear")) {
+            // Sunny / Clear Sun
+            dc.setPenWidth(1);
+            dc.fillCircle(x, y, 3);
+            dc.drawLine(x, y - 5, x, y - 4);
+            dc.drawLine(x, y + 4, x, y + 5);
+            dc.drawLine(x - 5, y, x - 4, y);
+            dc.drawLine(x + 4, y, x + 5, y);
+            dc.drawLine(x - 4, y - 4, x - 3, y - 3);
+            dc.drawLine(x + 3, y + 3, x + 4, y + 4);
+            dc.drawLine(x + 3, y - 3, x + 4, y - 4);
+            dc.drawLine(x - 4, y + 4, x - 3, y + 3);
+        } else if (condition.equals("Rain") || condition.equals("Drizzle")) {
+            // Cloud with Rain drops
+            drawCloudBody(dc, x, y - 2);
+            dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+            dc.setPenWidth(1);
+            dc.drawLine(x - 3, y + 3, x - 4, y + 5);
+            dc.drawLine(x, y + 3, x - 1, y + 5);
+            dc.drawLine(x + 3, y + 3, x + 2, y + 5);
+        } else if (condition.equals("Thunderstorm")) {
+            // Cloud with Lightning
+            drawCloudBody(dc, x, y - 2);
+            dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+            dc.setPenWidth(1);
+            dc.drawLine(x + 1, y + 2, x - 1, y + 4);
+            dc.drawLine(x - 1, y + 4, x + 2, y + 4);
+            dc.drawLine(x + 2, y + 4, x, y + 6);
+        } else if (condition.equals("Snow")) {
+            // Cloud with Snow
+            drawCloudBody(dc, x, y - 2);
+            dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+            dc.drawPoint(x - 3, y + 4);
+            dc.drawPoint(x, y + 5);
+            dc.drawPoint(x + 3, y + 4);
+        } else if (condition.equals("Mist") || condition.equals("Fog") || condition.equals("Haze")) {
+            // Mist lines
+            dc.setPenWidth(1);
+            dc.drawLine(x - 5, y - 2, x + 5, y - 2);
+            dc.drawLine(x - 7, y + 1, x + 7, y + 1);
+            dc.drawLine(x - 4, y + 4, x + 4, y + 4);
+        } else {
+            // Default Clouds / Partly Cloudy
+            drawCloudBody(dc, x, y);
+        }
+    }
+
+    private static function drawCloudBody(dc as Graphics.Dc, x as Lang.Number, y as Lang.Number) as Void {
+        dc.fillCircle(x - 3, y + 1, 3);
+        dc.fillCircle(x + 1, y, 4);
+        dc.fillCircle(x + 5, y + 1, 3);
+        dc.fillRectangle(x - 3, y + 2, 8, 2);
     }
 
     // 3. Sun Horizon Icon (Sunrise/Sunset)
     static function drawSunHorizon(dc as Graphics.Dc, x as Lang.Number, y as Lang.Number, color as Lang.Number) as Void {
         dc.setColor(color, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(2);
+        dc.setPenWidth(1);
 
-        dc.drawLine(x - 8, y + 4, x + 8, y + 4);
+        // Horizon line
+        dc.drawLine(x - 6, y + 3, x + 6, y + 3);
 
-        dc.fillCircle(x, y + 3, 5);
+        // Half sun disc
+        dc.fillCircle(x, y + 2, 3);
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-        dc.fillRectangle(x - 7, y + 5, 14, 5);
+        dc.fillRectangle(x - 5, y + 3, 10, 4);
 
+        // Radiating rays
         dc.setColor(color, Graphics.COLOR_TRANSPARENT);
-        dc.drawLine(x, y - 5, x, y - 2);
-        dc.drawLine(x - 6, y - 3, x - 3, y - 1);
-        dc.drawLine(x + 6, y - 3, x + 3, y - 1);
+        dc.drawLine(x, y - 3, x, y - 1);
+        dc.drawLine(x - 4, y - 2, x - 2, y - 1);
+        dc.drawLine(x + 4, y - 2, x + 2, y - 1);
     }
 
     // 4. Intensity / Runner Icon
     static function drawIntensityIcon(dc as Graphics.Dc, x as Lang.Number, y as Lang.Number, color as Lang.Number) as Void {
         dc.setColor(color, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(2);
+        dc.setPenWidth(1);
 
-        dc.fillCircle(x + 1, y - 5, 2);
-        dc.drawLine(x + 1, y - 3, x - 1, y + 1);
-        dc.drawLine(x - 1, y + 1, x - 5, y + 5);
-        dc.drawLine(x - 1, y + 1, x + 4, y + 5);
-        dc.drawLine(x, y - 1, x - 4, y);
-        dc.drawLine(x, y - 1, x + 4, y - 2);
+        dc.fillCircle(x + 1, y - 4, 1);
+        dc.drawLine(x + 1, y - 2, x - 1, y + 1);
+        dc.drawLine(x - 1, y + 1, x - 4, y + 4);
+        dc.drawLine(x - 1, y + 1, x + 3, y + 4);
+        dc.drawLine(x, y - 1, x - 3, y);
+        dc.drawLine(x, y - 1, x + 3, y - 2);
     }
 
     // 5. Heart with ECG Pulse Line Icon
     static function drawHeartWithPulse(dc as Graphics.Dc, x as Lang.Number, y as Lang.Number, color as Lang.Number) as Void {
         dc.setColor(color, Graphics.COLOR_TRANSPARENT);
 
-        dc.fillCircle(x - 3, y - 3, 3);
-        dc.fillCircle(x + 3, y - 3, 3);
+        dc.fillCircle(x - 2, y - 2, 2);
+        dc.fillCircle(x + 2, y - 2, 2);
         var tri = [
-            [x - 7, y - 1],
-            [x + 7, y - 1],
-            [x, y + 7]
+            [x - 5, y - 1],
+            [x + 5, y - 1],
+            [x, y + 5]
         ];
         dc.fillPolygon(tri);
 
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(1);
-        dc.drawLine(x - 6, y + 1, x - 2, y + 1);
-        dc.drawLine(x - 2, y + 1, x - 1, y - 3);
-        dc.drawLine(x - 1, y - 3, x + 1, y + 3);
-        dc.drawLine(x + 1, y + 3, x + 2, y + 1);
-        dc.drawLine(x + 2, y + 1, x + 6, y + 1);
+        dc.drawLine(x - 4, y, x - 1, y);
+        dc.drawLine(x - 1, y, x, y - 2);
+        dc.drawLine(x, y - 2, x + 1, y + 2);
+        dc.drawLine(x + 1, y + 2, x + 2, y);
+        dc.drawLine(x + 2, y, x + 4, y);
     }
 
     // 6. Footprints / Shoes Icon
     static function drawFootsteps(dc as Graphics.Dc, x as Lang.Number, y as Lang.Number, color as Lang.Number) as Void {
         dc.setColor(color, Graphics.COLOR_TRANSPARENT);
 
-        dc.fillCircle(x - 3, y + 3, 3);
-        dc.fillCircle(x - 4, y - 2, 2);
-        dc.fillCircle(x + 3, y + 1, 3);
-        dc.fillCircle(x + 2, y - 4, 2);
+        dc.fillCircle(x - 2, y + 2, 2);
+        dc.fillCircle(x - 3, y - 2, 1);
+        dc.fillCircle(x + 2, y, 2);
+        dc.fillCircle(x + 1, y - 4, 1);
     }
 }

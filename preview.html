@@ -142,7 +142,6 @@
             position: relative;
         }
 
-        /* Screen Canvas - 520x520 retina buffer */
         #watchfaceCanvas {
             width: 360px;
             height: 360px;
@@ -231,7 +230,7 @@
             justify-content: space-between;
         }
 
-        input[type="text"], input[type="number"] {
+        input[type="text"], input[type="number"], select {
             background: #0c1220;
             border: 1px solid #334155;
             border-radius: 6px;
@@ -241,7 +240,7 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
-        input[type="text"]:focus, input[type="number"]:focus {
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
             outline: none;
             border-color: #5bb3c7;
         }
@@ -294,7 +293,7 @@
         </div>
         <div class="status-pill">
             <span class="status-dot"></span>
-            <span>Real-time Precision Simulator</span>
+            <span>Pixel-Perfect Simulator</span>
         </div>
     </header>
 
@@ -311,7 +310,7 @@
                     <div class="bezel-screw screw-b"></div>
 
                     <div class="watch-inner-ring">
-                        <!-- 520x520 retina canvas for 260x260 Fenix 7 -->
+                        <!-- 520x520 canvas for retina sharpness -->
                         <canvas id="watchfaceCanvas" width="520" height="520"></canvas>
                     </div>
                 </div>
@@ -330,8 +329,8 @@
             <div>
                 <div class="section-title">Display Mode & Power State</div>
                 <div class="btn-group" style="margin-top: 0.6rem;">
-                    <button id="btnActive" class="btn active" onclick="setMode(true)">Active Mode (Seconds at 3:00 Rim)</button>
-                    <button id="btnRest" class="btn" onclick="setMode(false)">Rest / Sleep (Line at 3:00 Rim)</button>
+                    <button id="btnActive" class="btn active" onclick="setMode(true)">Active Mode (Seconds at Rim)</button>
+                    <button id="btnRest" class="btn" onclick="setMode(false)">Rest / Sleep (Line at Rim)</button>
                 </div>
             </div>
 
@@ -380,19 +379,30 @@
                         <input id="inputMinMax" type="text" value="21/17" oninput="updateData()">
                     </div>
                     <div class="form-row">
-                        <label class="form-label">Precipitation (2:00)</label>
-                        <input id="inputPrecip" type="text" value="100% 0mm" oninput="updateData()">
+                        <label class="form-label">Condition</label>
+                        <select id="inputCondition" onchange="updateData()">
+                            <option value="Clouds">Cloudy</option>
+                            <option value="Clear">Sunny / Clear</option>
+                            <option value="Rain">Rain</option>
+                            <option value="Thunderstorm">Thunderstorm</option>
+                            <option value="Snow">Snow</option>
+                            <option value="Mist">Mist / Fog</option>
+                        </select>
                     </div>
                 </div>
                 <div class="grid-2" style="margin-top: 0.6rem;">
                     <div class="form-row">
+                        <label class="form-label">Precipitation (2:00)</label>
+                        <input id="inputPrecip" type="text" value="100% 0mm" oninput="updateData()">
+                    </div>
+                    <div class="form-row">
                         <label class="form-label">Wind (12:00 Top)</label>
                         <input id="inputWind" type="text" value="13 NW" oninput="updateData()">
                     </div>
-                    <div class="form-row">
-                        <label class="form-label">Next Sun Event</label>
-                        <input id="inputSunEvent" type="text" value="20:31" oninput="updateData()">
-                    </div>
+                </div>
+                <div class="form-row" style="margin-top: 0.6rem;">
+                    <label class="form-label">Next Sun Event</label>
+                    <input id="inputSunEvent" type="text" value="20:31" oninput="updateData()">
                 </div>
             </div>
 
@@ -433,10 +443,6 @@
                     </div>
                 </div>
             </div>
-
-            <div class="info-card">
-                <strong>Angular Military Block Typography:</strong> The main hour digits and minute digits use squarish tactical/digital styling with straight vertical walls and cut corners.
-            </div>
         </div>
     </div>
 
@@ -460,6 +466,7 @@
             curTemp: "18",
             elevation: "132",
             minMax: "21/17",
+            condition: "Clouds",
             sunEvent: "20:31",
             intensity: "35",
             curHR: "61",
@@ -483,6 +490,7 @@
                 state.sec = 39;
                 state.israelTime = "ISR 10:07";
                 state.curHR = "61";
+                state.condition = "Clouds";
             } else if (preset === 'photo2') {
                 isAwake = false;
                 state.hour = 9;
@@ -490,6 +498,7 @@
                 state.sec = 0;
                 state.israelTime = "ISR 10:16";
                 state.curHR = "63";
+                state.condition = "Clouds";
             } else if (preset === 'live') {
                 isLiveTime = true;
             }
@@ -510,6 +519,7 @@
             document.getElementById('inputCurTemp').value = state.curTemp;
             document.getElementById('inputElevation').value = state.elevation;
             document.getElementById('inputMinMax').value = state.minMax;
+            document.getElementById('inputCondition').value = state.condition;
             document.getElementById('inputSunEvent').value = state.sunEvent;
             document.getElementById('inputIntensity').value = state.intensity;
             document.getElementById('inputCurHR').value = state.curHR;
@@ -531,6 +541,7 @@
             state.curTemp = document.getElementById('inputCurTemp').value;
             state.elevation = document.getElementById('inputElevation').value;
             state.minMax = document.getElementById('inputMinMax').value;
+            state.condition = document.getElementById('inputCondition').value;
             state.sunEvent = document.getElementById('inputSunEvent').value;
             state.intensity = document.getElementById('inputIntensity').value;
             state.curHR = document.getElementById('inputCurHR').value;
@@ -547,6 +558,9 @@
                 if (!res.ok) throw new Error('API error');
                 const data = await res.json();
                 
+                if (data.weather && data.weather.length > 0) {
+                    state.condition = data.weather[0].main;
+                }
                 if (data.main) {
                     state.curTemp = Math.round(data.main.temp).toString();
                     state.minMax = `${Math.round(data.main.temp_max)}/${Math.round(data.main.temp_min)}`;
@@ -569,7 +583,7 @@
                 renderWatchface();
                 alert('Live weather updated successfully from OpenWeatherMap!');
             } catch (err) {
-                alert('Failed to fetch from OpenWeatherMap. Check API Key or network: ' + err.message);
+                alert('Failed to fetch from OpenWeatherMap: ' + err.message);
             }
         }
 
@@ -594,24 +608,23 @@
             ctx.fillStyle = "#000000";
             ctx.fillRect(0, 0, w, h);
 
-            // Palette - Metallic slate-cyan, pure white text & icons, subtle grey dividers
+            // Palette
             const METALLIC_CYAN = "#388b9c";
             const METALLIC_CYAN_TICK = "#3ea3b8";
             const WHITE = "#FFFFFF";
             const GRAY_DIVIDER = "#4a5568";
 
-            // --- 1. Metallic Divider Ticks at EXACTLY 1, 3, 5, 7, 9, 11 o'clock ---
-            ctx.lineWidth = 7;
+            // --- 1. Metallic Divider Ticks at 1, 3, 5, 7, 9, 11 o'clock ---
+            ctx.lineWidth = 6;
             ctx.strokeStyle = METALLIC_CYAN_TICK;
             ctx.fillStyle = METALLIC_CYAN_TICK;
 
-            const rOuter = cx * 0.95;
-            const rInner = cx * 0.85;
+            const rOuter = cx * 0.96;
+            const rInner = cx * 0.86;
 
-            // Radial ticks at 1, 5, 7, 11 o'clock
             const clockTicksHours = [1, 5, 7, 11];
             clockTicksHours.forEach(hour => {
-                const angleDeg = hour * 30; // 1 -> 30°, 5 -> 150°, 7 -> 210°, 11 -> 330°
+                const angleDeg = hour * 30;
                 const rad = angleDeg * Math.PI / 180;
                 
                 const x1 = cx + rInner * Math.sin(rad);
@@ -626,294 +639,307 @@
             });
 
             // 9 o'clock tick: Left horizontal bar at the rim (270°)
-            ctx.fillRect(cx - rOuter, cy - 4, (rOuter - rInner), 8);
+            ctx.fillRect(cx - rOuter, cy - 3, (rOuter - rInner), 6);
 
             // 3 o'clock position: Right horizontal (90°)
             if (isAwake) {
                 const secStr = String(state.sec).padStart(2, '0');
                 ctx.fillStyle = METALLIC_CYAN_TICK;
-                ctx.font = "700 28px 'Rajdhani', sans-serif";
+                ctx.font = "700 22px 'Rajdhani', sans-serif";
                 ctx.textAlign = "right";
                 ctx.textBaseline = "middle";
-                ctx.fillText(secStr, cx + rOuter, cy);
+                ctx.fillText(secStr, cx + rOuter - 2, cy);
             } else {
-                ctx.fillRect(cx + rInner, cy - 4, (rOuter - rInner), 8);
+                ctx.fillRect(cx + rInner, cy - 3, (rOuter - rInner), 6);
             }
 
-            // --- 2. Curved Perimeter Data Fields centered at 12, 2, 4, 6, 8, 10 o'clock ---
-            const rimRadius = cx * 0.88;
-            const ringFont = "700 24px 'Rajdhani', sans-serif";
-
-            // Top half sectors (isBottom = false)
-            drawCurvedClockText(state.wind, cx, cy, rimRadius, 0, ringFont, WHITE, false);
-            drawCurvedClockText(state.precip, cx, cy, rimRadius, 60, ringFont, WHITE, false);
-            drawCurvedClockText(state.israelTime, cx, cy, rimRadius, 300, ringFont, WHITE, false);
-
-            // Bottom half sectors (isBottom = true: reads left-to-right right-side-up)
-            drawCurvedClockText(state.weeklyBike, cx, cy, rimRadius, 240, ringFont, WHITE, true);
-            drawCurvedClockText(state.dateStr, cx, cy, rimRadius, 180, ringFont, WHITE, true);
-            drawCurvedClockText(state.weeklySteps, cx, cy, rimRadius, 120, ringFont, WHITE, true);
-
-            // --- 3. Upper Data Area ---
-            // Current Temp (top, under wind) - Font size matches other metric values (28px)
+            // --- 2. Perimeter Data Fields along the rim ---
             ctx.fillStyle = WHITE;
-            ctx.font = "700 28px 'Rajdhani', sans-serif";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText(state.curTemp, cx, cy * 0.28);
+            ctx.font = "700 20px 'Rajdhani', sans-serif";
 
-            const upperRowY = cy * 0.51;
-            const upperIconY = upperRowY - 20;
-            const upperTextY = upperRowY + 7;
+            // 12:00 Top: Wind
+            ctx.fillText(state.wind, cx, cy * 0.12);
 
-            const col1X = cx * 0.65;
+            // 2:00 Top Right: Precip
+            ctx.fillText(state.precip, cx * 1.44, cy * 0.30);
+
+            // 10:00 Top Left: Israel Time
+            ctx.fillText(state.israelTime, cx * 0.56, cy * 0.30);
+
+            // 8:00 Bottom Left: Weekly Bike
+            ctx.fillText(state.weeklyBike, cx * 0.54, cy * 1.62);
+
+            // 6:00 Bottom: Date
+            ctx.fillText(state.dateStr, cx, cy * 1.82);
+
+            // 4:00 Bottom Right: Weekly Steps
+            ctx.fillText(state.weeklySteps, cx * 1.46, cy * 1.62);
+
+            // --- 3. Upper Data Area ---
+            // Current Temp (top, under wind)
+            ctx.fillStyle = WHITE;
+            ctx.font = "700 24px 'Rajdhani', sans-serif";
+            ctx.fillText(state.curTemp, cx, cy * 0.25);
+
+            const upperRowY = cy * 0.50;
+            const upperIconY = upperRowY - 14;
+            const upperTextY = upperRowY + 10;
+
+            const col1X = cx * 0.58;
             const col2X = cx;
-            const col3X = cx * 1.35;
+            const col3X = cx * 1.42;
 
-            // Elevation + Mountain icon (All Pure White, 28px matching font)
+            // Col 1: Elevation + Mountain icon
             drawMountainIcon(col1X, upperIconY, WHITE);
             ctx.fillStyle = WHITE;
-            ctx.font = "700 28px 'Rajdhani', sans-serif";
+            ctx.font = "700 20px 'Rajdhani', sans-serif";
             ctx.fillText(state.elevation, col1X, upperTextY);
 
-            // Min/Max + Weather cloud icon (All Pure White, 28px matching font)
-            drawWeatherIcon(col2X, upperIconY, WHITE);
+            // Col 2: Min/Max + Dynamic Weather Condition icon
+            drawWeatherConditionIcon(col2X, upperIconY, state.condition, WHITE);
             ctx.fillStyle = WHITE;
             ctx.fillText(state.minMax, col2X, upperTextY);
 
-            // Sun Event + Sun icon (All Pure White, 28px matching font)
+            // Col 3: Sun Event + Sun icon
             drawSunIcon(col3X, upperIconY, WHITE);
             ctx.fillStyle = WHITE;
             ctx.fillText(state.sunEvent, col3X, upperTextY);
 
-            // Upper Vertical Dividers (Subtle Grey)
+            // Upper Vertical Dividers (Grey)
             ctx.strokeStyle = GRAY_DIVIDER;
             ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.moveTo(cx * 0.83, upperIconY - 8);
-            ctx.lineTo(cx * 0.83, upperTextY + 16);
-            ctx.moveTo(cx * 1.17, upperIconY - 8);
-            ctx.lineTo(cx * 1.17, upperTextY + 16);
+            ctx.moveTo(cx * 0.79, upperIconY - 6);
+            ctx.lineTo(cx * 0.79, upperTextY + 12);
+            ctx.moveTo(cx * 1.21, upperIconY - 6);
+            ctx.lineTo(cx * 1.21, upperTextY + 12);
             ctx.stroke();
 
-            // --- 4. Center Main Time Display (Squarish Block Digital Typography: Orbitron / Oxanium) ---
+            // --- 4. Center Main Time Display (PERFECTLY CENTERED) ---
             const hourStr = String(state.hour).padStart(2, '0');
             const minStr = String(state.min).padStart(2, '0');
 
-            const timeY = cy * 0.94;
-            // Less round, squarish military digital font
-            ctx.font = "800 126px 'Orbitron', 'Oxanium', 'Chakra Petch', sans-serif";
+            const timeFont = "800 114px 'Orbitron', 'Oxanium', sans-serif";
+            ctx.font = timeFont;
             ctx.textBaseline = "middle";
 
-            // Hours: Solid Filled White
-            ctx.fillStyle = WHITE;
-            ctx.textAlign = "right";
-            ctx.fillText(hourStr, cx - 10, timeY);
+            const hourW = ctx.measureText(hourStr).width;
+            const minW = ctx.measureText(minStr).width;
+            const timeGap = 8;
+            const totalTimeW = hourW + timeGap + minW;
 
-            // Minutes: Hollow Outlined White (Clean, squarish military stroke)
+            const startX = cx - (totalTimeW / 2);
+            const timeY = cy * 0.94;
+
+            // Hours: Solid Filled White (Centered)
+            ctx.fillStyle = WHITE;
             ctx.textAlign = "left";
-            ctx.lineWidth = 6;
+            ctx.fillText(hourStr, startX, timeY);
+
+            // Minutes: Hollow Outlined White (Centered)
+            const minX = startX + hourW + timeGap;
+            ctx.lineWidth = 5;
             ctx.strokeStyle = WHITE;
-            ctx.strokeText(minStr, cx + 10, timeY);
+            ctx.strokeText(minStr, minX, timeY);
             ctx.fillStyle = "#000000";
-            ctx.fillText(minStr, cx + 10, timeY);
+            ctx.fillText(minStr, minX, timeY);
 
             // --- 5. Lower Data Area ---
-            const lowerRowY = cy * 1.28;
-            const lowerTextY = lowerRowY - 8;
-            const lowerIconY = lowerRowY + 22;
+            const lowerRowY = cy * 1.22;
+            const lowerTextY = lowerRowY - 6;
+            const lowerIconY = lowerRowY + 16;
 
-            // Weekly Intensity (All Pure White, 28px matching font)
+            // Col 1: Weekly Intensity
             ctx.fillStyle = WHITE;
-            ctx.font = "700 28px 'Rajdhani', sans-serif";
+            ctx.font = "700 20px 'Rajdhani', sans-serif";
             ctx.textAlign = "center";
             ctx.fillText(state.intensity, col1X, lowerTextY);
             drawIntensityIcon(col1X, lowerIconY, WHITE);
 
-            // Current Heart Rate (All Pure White, 28px matching font)
+            // Col 2: Current Heart Rate
             ctx.fillText(state.curHR, col2X, lowerTextY);
             drawHeartIcon(col2X, lowerIconY, WHITE);
 
-            // Today's Steps (All Pure White, 28px matching font)
+            // Col 3: Today's Steps
             ctx.fillText(state.todaySteps, col3X, lowerTextY);
             drawFootstepsIcon(col3X, lowerIconY, WHITE);
 
-            // Lower Vertical Dividers (Subtle Grey)
+            // Lower Vertical Dividers (Grey)
             ctx.strokeStyle = GRAY_DIVIDER;
             ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.moveTo(cx * 0.83, lowerTextY - 14);
-            ctx.lineTo(cx * 0.83, lowerIconY + 14);
-            ctx.moveTo(cx * 1.17, lowerTextY - 14);
-            ctx.lineTo(cx * 1.17, lowerIconY + 14);
+            ctx.moveTo(cx * 0.79, lowerTextY - 10);
+            ctx.lineTo(cx * 0.79, lowerIconY + 10);
+            ctx.moveTo(cx * 1.21, lowerTextY - 10);
+            ctx.lineTo(cx * 1.21, lowerIconY + 10);
             ctx.stroke();
 
-            // 7-Day Average Resting Heart Rate (White, 28px matching font)
+            // 7-Day Average Resting Heart Rate (Bottom center under heart icon)
             ctx.fillStyle = WHITE;
-            ctx.font = "700 28px 'Rajdhani', sans-serif";
-            ctx.fillText(state.rhr, col2X, cy * 1.58);
+            ctx.font = "700 20px 'Rajdhani', sans-serif";
+            ctx.fillText(state.rhr, col2X, cy * 1.48);
         }
 
-        // --- High-Precision Clockwise Curved Text Engine ---
-        function drawCurvedClockText(text, cx, cy, radius, clockAngleDeg, font, color, isBottomHalf) {
-            ctx.save();
-            ctx.font = font;
-            ctx.fillStyle = color;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-
-            const chars = text.split("");
-            const charWidths = chars.map(c => ctx.measureText(c).width);
-            const totalWidth = charWidths.reduce((a, b) => a + b, 0);
-            const totalAngle = totalWidth / radius;
-            const centerRad = clockAngleDeg * Math.PI / 180;
-
-            if (!isBottomHalf) {
-                let currentAngle = centerRad - (totalAngle / 2);
-                for (let i = 0; i < chars.length; i++) {
-                    const charAngle = (charWidths[i] / radius);
-                    const midAngle = currentAngle + (charAngle / 2);
-
-                    const x = cx + radius * Math.sin(midAngle);
-                    const y = cy - radius * Math.cos(midAngle);
-
-                    ctx.save();
-                    ctx.translate(x, y);
-                    ctx.rotate(midAngle);
-                    ctx.fillText(chars[i], 0, 0);
-                    ctx.restore();
-
-                    currentAngle += charAngle;
-                }
-            } else {
-                let currentAngle = centerRad + (totalAngle / 2);
-                for (let i = 0; i < chars.length; i++) {
-                    const charAngle = (charWidths[i] / radius);
-                    const midAngle = currentAngle - (charAngle / 2);
-
-                    const x = cx + radius * Math.sin(midAngle);
-                    const y = cy - radius * Math.cos(midAngle);
-
-                    ctx.save();
-                    ctx.translate(x, y);
-                    ctx.rotate(midAngle - Math.PI);
-                    ctx.fillText(chars[i], 0, 0);
-                    ctx.restore();
-
-                    currentAngle -= charAngle;
-                }
-            }
-
-            ctx.restore();
-        }
-
-        // --- Vector Icon Drawing Functions (Scaled & Crisp) ---
+        // --- Vector Icon Drawing Functions ---
         function drawMountainIcon(x, y, color) {
             ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.moveTo(x, y - 9);
-            ctx.lineTo(x - 11, y + 7);
-            ctx.lineTo(x + 7, y + 7);
+            ctx.moveTo(x, y - 7);
+            ctx.lineTo(x - 8, y + 5);
+            ctx.lineTo(x + 5, y + 5);
             ctx.fill();
 
             ctx.beginPath();
-            ctx.moveTo(x + 4, y - 5);
-            ctx.lineTo(x - 2, y + 7);
-            ctx.lineTo(x + 11, y + 7);
+            ctx.moveTo(x + 3, y - 3);
+            ctx.lineTo(x - 1, y + 5);
+            ctx.lineTo(x + 8, y + 5);
             ctx.fill();
 
-            // Snow line
             ctx.strokeStyle = "#000000";
-            ctx.lineWidth = 1.5;
+            ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(x - 3, y - 1);
+            ctx.moveTo(x - 2, y);
             ctx.lineTo(x + 2, y + 2);
             ctx.stroke();
         }
 
-        function drawWeatherIcon(x, y, color) {
+        function drawWeatherConditionIcon(x, y, condition, color) {
+            ctx.fillStyle = color;
+            ctx.strokeStyle = color;
+
+            if (condition === "Clear") {
+                // Clear Sun
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                // Rays
+                ctx.beginPath();
+                ctx.moveTo(x, y - 7); ctx.lineTo(x, y - 5);
+                ctx.moveTo(x, y + 5); ctx.lineTo(x, y + 7);
+                ctx.moveTo(x - 7, y); ctx.lineTo(x - 5, y);
+                ctx.moveTo(x + 5, y); ctx.lineTo(x + 7, y);
+                ctx.moveTo(x - 5, y - 5); ctx.lineTo(x - 3.5, y - 3.5);
+                ctx.moveTo(x + 3.5, y + 3.5); ctx.lineTo(x + 5, y + 5);
+                ctx.moveTo(x + 3.5, y - 3.5); ctx.lineTo(x + 5, y - 5);
+                ctx.moveTo(x - 5, y + 5); ctx.lineTo(x - 3.5, y + 3.5);
+                ctx.stroke();
+            } else if (condition === "Rain" || condition === "Drizzle") {
+                // Cloud with rain
+                drawCloud(x, y - 2, color);
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(x - 4, y + 4); ctx.lineTo(x - 5, y + 7);
+                ctx.moveTo(x, y + 4); ctx.lineTo(x - 1, y + 7);
+                ctx.moveTo(x + 4, y + 4); ctx.lineTo(x + 3, y + 7);
+                ctx.stroke();
+            } else if (condition === "Thunderstorm") {
+                // Cloud with lightning
+                drawCloud(x, y - 2, color);
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(x + 1, y + 3); ctx.lineTo(x - 1, y + 6);
+                ctx.lineTo(x + 2, y + 6); ctx.lineTo(x, y + 9);
+                ctx.stroke();
+            } else if (condition === "Snow") {
+                drawCloud(x, y - 2, color);
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(x - 3, y + 5, 1, 0, Math.PI * 2);
+                ctx.arc(x + 1, y + 6, 1, 0, Math.PI * 2);
+                ctx.arc(x + 4, y + 5, 1, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (condition === "Mist" || condition === "Fog") {
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(x - 6, y - 3); ctx.lineTo(x + 6, y - 3);
+                ctx.moveTo(x - 8, y); ctx.lineTo(x + 8, y);
+                ctx.moveTo(x - 5, y + 3); ctx.lineTo(x + 5, y + 3);
+                ctx.stroke();
+            } else {
+                // Cloud
+                drawCloud(x, y, color);
+            }
+        }
+
+        function drawCloud(x, y, color) {
             ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.arc(x - 6, y + 1, 7, 0, Math.PI * 2);
-            ctx.arc(x + 3, y, 8, 0, Math.PI * 2);
-            ctx.arc(x + 9, y + 2, 6, 0, Math.PI * 2);
+            ctx.arc(x - 4, y + 1, 4, 0, Math.PI * 2);
+            ctx.arc(x + 1, y, 5, 0, Math.PI * 2);
+            ctx.arc(x + 6, y + 1, 3.5, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillRect(x - 6, y + 3, 16, 6);
-
-            // Sun disc
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 1.8;
-            ctx.beginPath();
-            ctx.arc(x - 8, y - 5, 3.5, 0, Math.PI * 2);
-            ctx.stroke();
+            ctx.fillRect(x - 4, y + 1, 10, 4);
         }
 
         function drawSunIcon(x, y, color) {
             ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.moveTo(x - 11, y + 5);
-            ctx.lineTo(x + 11, y + 5);
+            ctx.moveTo(x - 8, y + 4);
+            ctx.lineTo(x + 8, y + 4);
             ctx.stroke();
 
             ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.arc(x, y + 4, 7, Math.PI, 0);
+            ctx.arc(x, y + 3, 5, Math.PI, 0);
             ctx.fill();
 
             ctx.beginPath();
-            ctx.moveTo(x, y - 7); ctx.lineTo(x, y - 3);
-            ctx.moveTo(x - 8, y - 3); ctx.lineTo(x - 4, y - 1);
-            ctx.moveTo(x + 8, y - 3); ctx.lineTo(x + 4, y - 1);
+            ctx.moveTo(x, y - 4); ctx.lineTo(x, y - 2);
+            ctx.moveTo(x - 6, y - 2); ctx.lineTo(x - 3, y - 1);
+            ctx.moveTo(x + 6, y - 2); ctx.lineTo(x + 3, y - 1);
             ctx.stroke();
         }
 
         function drawIntensityIcon(x, y, color) {
             ctx.strokeStyle = color;
             ctx.fillStyle = color;
-            ctx.lineWidth = 2.2;
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.arc(x + 1, y - 7, 3.5, 0, Math.PI * 2);
+            ctx.arc(x + 1, y - 5, 2, 0, Math.PI * 2);
             ctx.fill();
 
             ctx.beginPath();
-            ctx.moveTo(x + 1, y - 4); ctx.lineTo(x - 1, y + 2);
-            ctx.moveTo(x - 1, y + 2); ctx.lineTo(x - 7, y + 8);
-            ctx.moveTo(x - 1, y + 2); ctx.lineTo(x + 6, y + 8);
-            ctx.moveTo(x, y - 1); ctx.lineTo(x - 6, y);
-            ctx.moveTo(x, y - 1); ctx.lineTo(x + 6, y - 2);
+            ctx.moveTo(x + 1, y - 3); ctx.lineTo(x - 1, y + 1);
+            ctx.moveTo(x - 1, y + 1); ctx.lineTo(x - 5, y + 5);
+            ctx.moveTo(x - 1, y + 1); ctx.lineTo(x + 4, y + 5);
+            ctx.moveTo(x, y - 1); ctx.lineTo(x - 4, y);
+            ctx.moveTo(x, y - 1); ctx.lineTo(x + 4, y - 2);
             ctx.stroke();
         }
 
         function drawHeartIcon(x, y, color) {
             ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.arc(x - 4.5, y - 2.5, 4.5, 0, Math.PI * 2);
-            ctx.arc(x + 4.5, y - 2.5, 4.5, 0, Math.PI * 2);
-            ctx.moveTo(x - 9, y - 1);
-            ctx.lineTo(x + 9, y - 1);
-            ctx.lineTo(x, y + 9);
+            ctx.arc(x - 3, y - 2, 3, 0, Math.PI * 2);
+            ctx.arc(x + 3, y - 2, 3, 0, Math.PI * 2);
+            ctx.moveTo(x - 6, y - 1);
+            ctx.lineTo(x + 6, y - 1);
+            ctx.lineTo(x, y + 6);
             ctx.fill();
 
             ctx.strokeStyle = "#000000";
-            ctx.lineWidth = 1.8;
+            ctx.lineWidth = 1.2;
             ctx.beginPath();
-            ctx.moveTo(x - 7, y + 1);
-            ctx.lineTo(x - 2.5, y + 1);
-            ctx.lineTo(x - 1.2, y - 3.5);
-            ctx.lineTo(x + 1.2, y + 4.5);
-            ctx.lineTo(x + 2.5, y + 1);
-            ctx.lineTo(x + 7, y + 1);
+            ctx.moveTo(x - 5, y);
+            ctx.lineTo(x - 1.5, y);
+            ctx.lineTo(x - 0.8, y - 2.5);
+            ctx.lineTo(x + 0.8, y + 2.5);
+            ctx.lineTo(x + 1.5, y);
+            ctx.lineTo(x + 5, y);
             ctx.stroke();
         }
 
         function drawFootstepsIcon(x, y, color) {
             ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.arc(x - 4.5, y + 3.5, 3.5, 0, Math.PI * 2);
-            ctx.arc(x - 5.5, y - 3.5, 3.5, 0, Math.PI * 2);
-            ctx.arc(x + 4.5, y, 3.5, 0, Math.PI * 2);
-            ctx.arc(x + 3.5, y - 7, 3.5, 0, Math.PI * 2);
+            ctx.arc(x - 3, y + 2, 2.2, 0, Math.PI * 2);
+            ctx.arc(x - 4, y - 2, 1.8, 0, Math.PI * 2);
+            ctx.arc(x + 3, y, 2.2, 0, Math.PI * 2);
+            ctx.arc(x + 2, y - 4, 1.8, 0, Math.PI * 2);
             ctx.fill();
         }
 

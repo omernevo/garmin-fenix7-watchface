@@ -41,6 +41,12 @@ class Fenix7WatchFaceApp extends Application.AppBase {
     function onBackgroundData(data as Application.PersistableType) as Void {
         if (data instanceof Lang.Dictionary) {
             var weatherData = data as Lang.Dictionary;
+            if (weatherData.hasKey("condition")) {
+                Storage.setValue("OwmCondition", weatherData.get("condition"));
+            }
+            if (weatherData.hasKey("conditionId")) {
+                Storage.setValue("OwmConditionId", weatherData.get("conditionId"));
+            }
             if (weatherData.hasKey("temp")) {
                 Storage.setValue("OwmTemp", weatherData.get("temp"));
             }
