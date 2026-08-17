@@ -96,7 +96,6 @@
             filter: drop-shadow(0 20px 35px rgba(0, 0, 0, 0.85));
         }
 
-        /* Garmin Fenix 7 Metallic Titanium Bezel */
         .watch-bezel {
             position: absolute;
             top: 0;
@@ -271,16 +270,6 @@
             background: #10b981;
             box-shadow: 0 0 8px #10b981;
         }
-
-        .info-card {
-            background: rgba(12, 18, 32, 0.6);
-            border-radius: 8px;
-            padding: 0.75rem;
-            border: 1px dashed #334155;
-            font-size: 0.78rem;
-            color: var(--text-secondary);
-            line-height: 1.4;
-        }
     </style>
 </head>
 <body>
@@ -310,7 +299,7 @@
                     <div class="bezel-screw screw-b"></div>
 
                     <div class="watch-inner-ring">
-                        <!-- 520x520 canvas for retina sharpness -->
+                        <!-- 520x520 canvas for retina sharpness (scaled 2x from 260x260) -->
                         <canvas id="watchfaceCanvas" width="520" height="520"></canvas>
                     </div>
                 </div>
@@ -587,7 +576,7 @@
             }
         }
 
-        // --- Watchface Rendering Pipeline ---
+        // --- Watchface Rendering Pipeline (2x Scale = 520x520) ---
         function renderWatchface() {
             if (isLiveTime) {
                 const now = new Date();
@@ -609,7 +598,6 @@
             ctx.fillRect(0, 0, w, h);
 
             // Palette
-            const METALLIC_CYAN = "#388b9c";
             const METALLIC_CYAN_TICK = "#3ea3b8";
             const WHITE = "#FFFFFF";
             const GRAY_DIVIDER = "#4a5568";
@@ -645,56 +633,55 @@
             if (isAwake) {
                 const secStr = String(state.sec).padStart(2, '0');
                 ctx.fillStyle = METALLIC_CYAN_TICK;
-                ctx.font = "700 22px 'Rajdhani', sans-serif";
-                ctx.textAlign = "right";
+                ctx.font = "700 20px 'Rajdhani', sans-serif";
+                ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
-                ctx.fillText(secStr, cx + rOuter - 2, cy);
+                ctx.fillText(secStr, cx * 1.80, cy);
             } else {
                 ctx.fillRect(cx + rInner, cy - 3, (rOuter - rInner), 6);
             }
 
-            // --- 2. Perimeter Data Fields along the rim ---
+            // --- 2. Perimeter Data Fields in a Ring Around the Rim ---
             ctx.fillStyle = WHITE;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.font = "700 20px 'Rajdhani', sans-serif";
+            ctx.font = "700 19px 'Rajdhani', sans-serif";
 
             // 12:00 Top: Wind
-            ctx.fillText(state.wind, cx, cy * 0.12);
+            ctx.fillText(state.wind, cx, 28);
 
             // 2:00 Top Right: Precip
-            ctx.fillText(state.precip, cx * 1.44, cy * 0.30);
+            ctx.fillText(state.precip, 412, 120);
 
             // 10:00 Top Left: Israel Time
-            ctx.fillText(state.israelTime, cx * 0.56, cy * 0.30);
+            ctx.fillText(state.israelTime, 108, 120);
 
             // 8:00 Bottom Left: Weekly Bike
-            ctx.fillText(state.weeklyBike, cx * 0.54, cy * 1.62);
+            ctx.fillText(state.weeklyBike, 108, 400);
 
             // 6:00 Bottom: Date
-            ctx.fillText(state.dateStr, cx, cy * 1.82);
+            ctx.fillText(state.dateStr, cx, 488);
 
             // 4:00 Bottom Right: Weekly Steps
-            ctx.fillText(state.weeklySteps, cx * 1.46, cy * 1.62);
+            ctx.fillText(state.weeklySteps, 412, 400);
 
             // --- 3. Upper Data Area ---
             // Current Temp (top, under wind)
             ctx.fillStyle = WHITE;
-            ctx.font = "700 24px 'Rajdhani', sans-serif";
-            ctx.fillText(state.curTemp, cx, cy * 0.25);
+            ctx.font = "700 22px 'Rajdhani', sans-serif";
+            ctx.fillText(state.curTemp, cx, 68);
 
-            const upperRowY = cy * 0.50;
-            const upperIconY = upperRowY - 14;
-            const upperTextY = upperRowY + 10;
+            const upperIconY = 112;
+            const upperTextY = 132;
 
-            const col1X = cx * 0.58;
+            const col1X = 168;
             const col2X = cx;
-            const col3X = cx * 1.42;
+            const col3X = 352;
 
             // Col 1: Elevation + Mountain icon
             drawMountainIcon(col1X, upperIconY, WHITE);
             ctx.fillStyle = WHITE;
-            ctx.font = "700 20px 'Rajdhani', sans-serif";
+            ctx.font = "700 18px 'Rajdhani', sans-serif";
             ctx.fillText(state.elevation, col1X, upperTextY);
 
             // Col 2: Min/Max + Dynamic Weather Condition icon
@@ -711,10 +698,10 @@
             ctx.strokeStyle = GRAY_DIVIDER;
             ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.moveTo(cx * 0.79, upperIconY - 6);
-            ctx.lineTo(cx * 0.79, upperTextY + 12);
-            ctx.moveTo(cx * 1.21, upperIconY - 6);
-            ctx.lineTo(cx * 1.21, upperTextY + 12);
+            ctx.moveTo(216, upperIconY - 6);
+            ctx.lineTo(216, upperTextY + 12);
+            ctx.moveTo(304, upperIconY - 6);
+            ctx.lineTo(304, upperTextY + 12);
             ctx.stroke();
 
             // --- 4. Center Main Time Display (PERFECTLY CENTERED) ---
@@ -731,7 +718,7 @@
             const totalTimeW = hourW + timeGap + minW;
 
             const startX = cx - (totalTimeW / 2);
-            const timeY = cy * 0.94;
+            const timeY = 246;
 
             // Hours: Solid Filled White (Centered)
             ctx.fillStyle = WHITE;
@@ -747,13 +734,12 @@
             ctx.fillText(minStr, minX, timeY);
 
             // --- 5. Lower Data Area ---
-            const lowerRowY = cy * 1.22;
-            const lowerTextY = lowerRowY - 6;
-            const lowerIconY = lowerRowY + 16;
+            const lowerTextY = 316;
+            const lowerIconY = 348;
 
             // Col 1: Weekly Intensity
             ctx.fillStyle = WHITE;
-            ctx.font = "700 20px 'Rajdhani', sans-serif";
+            ctx.font = "700 18px 'Rajdhani', sans-serif";
             ctx.textAlign = "center";
             ctx.fillText(state.intensity, col1X, lowerTextY);
             drawIntensityIcon(col1X, lowerIconY, WHITE);
@@ -770,16 +756,16 @@
             ctx.strokeStyle = GRAY_DIVIDER;
             ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.moveTo(cx * 0.79, lowerTextY - 10);
-            ctx.lineTo(cx * 0.79, lowerIconY + 10);
-            ctx.moveTo(cx * 1.21, lowerTextY - 10);
-            ctx.lineTo(cx * 1.21, lowerIconY + 10);
+            ctx.moveTo(216, lowerTextY - 8);
+            ctx.lineTo(216, lowerIconY + 10);
+            ctx.moveTo(304, lowerTextY - 8);
+            ctx.lineTo(304, lowerIconY + 10);
             ctx.stroke();
 
             // 7-Day Average Resting Heart Rate (Bottom center under heart icon)
             ctx.fillStyle = WHITE;
-            ctx.font = "700 20px 'Rajdhani', sans-serif";
-            ctx.fillText(state.rhr, col2X, cy * 1.48);
+            ctx.font = "700 18px 'Rajdhani', sans-serif";
+            ctx.fillText(state.rhr, col2X, 388);
         }
 
         // --- Vector Icon Drawing Functions ---

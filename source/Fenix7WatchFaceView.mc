@@ -47,16 +47,16 @@ class Fenix7WatchFaceView extends WatchUi.WatchFace {
         dc.setColor(colorBlack, colorBlack);
         dc.clear();
 
-        // 2. Draw 6 Metallic Divider Ticks at EXACTLY 1, 3, 5, 7, 9, 11 o'clock
+        // 2. Draw 6 Metallic Divider Ticks at EXACTLY 1, 3, 5, 7, 9, 11 o'clock on outer rim
         drawPerimeterTicks(dc, cx, cy);
 
-        // 3. Draw 6 Perimeter Data Fields centered in each sector along the rim
+        // 3. Draw 6 Perimeter Data Fields in a clean ring around the watchface
         drawPerimeterData(dc, cx, cy);
 
         // 4. Draw Upper Section (Current Temp, Elevation, Min/Max + Weather icon, Sun Event)
         drawUpperSection(dc, cx, cy);
 
-        // 5. Draw Center Main Time (Centered Hours + Minutes + Seconds/Rest Bar)
+        // 5. Draw Center Main Time (Centered Hours + Outlined Minutes + Seconds/Rest Bar)
         drawMainTime(dc, cx, cy);
 
         // 6. Draw Lower Section (Intensity, HR, Today Steps, 7-Day RHR)
@@ -71,7 +71,7 @@ class Fenix7WatchFaceView extends WatchUi.WatchFace {
         var rOuter = (cx * 0.96).toNumber();
         var rInner = (cx * 0.86).toNumber();
 
-        // Radial ticks at 1, 5, 7, 11 o'clock
+        // Radial ticks at 1, 5, 7, 11 o'clock (30°, 150°, 210°, 330°)
         var tickHours = [1, 5, 7, 11];
         for (var i = 0; i < tickHours.size(); i++) {
             var rad = (tickHours[i] * 30.0) * Math.PI / 180.0;
@@ -86,13 +86,13 @@ class Fenix7WatchFaceView extends WatchUi.WatchFace {
         dc.fillRectangle(cx - rOuter, cy - 2, (rOuter - rInner), 4);
 
         // 3 o'clock position: Right horizontal (90°)
-        // In Rest Mode: Metallic tick bar at the rim
+        // In Rest Mode: Metallic horizontal tick bar at the rim
         if (!isAwake) {
             dc.fillRectangle(cx + rInner, cy - 2, (rOuter - rInner), 4);
         }
     }
 
-    // --- 2. Perimeter Data Fields along the rim ---
+    // --- 2. Perimeter Data Fields centered within the 6 sectors around the rim ---
     private function drawPerimeterData(dc as Graphics.Dc, cx as Lang.Number, cy as Lang.Number) as Void {
         var owmSpeed = Storage.getValue("OwmWindSpeed") as Lang.Number?;
         var owmDeg = Storage.getValue("OwmWindDeg") as Lang.Number?;
@@ -105,33 +105,33 @@ class Fenix7WatchFaceView extends WatchUi.WatchFace {
 
         dc.setColor(colorWhite, Graphics.COLOR_TRANSPARENT);
 
-        // 12 o'clock (Top): Wind (e.g. "13 NW")
+        // 12 o'clock Sector (Top): Wind (e.g. "13 NW")
         var windStr = ActivityHistoryHelper.getWindString(owmSpeed, owmDeg);
-        dc.drawText(cx, 10, Graphics.FONT_XTINY, windStr, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, 14, Graphics.FONT_XTINY, windStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        // 2 o'clock (Top Right): Precipitation (e.g. "100% 0mm")
+        // 2 o'clock Sector (Top-Right): Precipitation (e.g. "100% 0mm")
         var precipStr = Lang.format("$1$% $2$mm", [pop, rain1h.format("%.0f")]);
-        dc.drawText((cx * 1.44).toNumber(), (cy * 0.30).toNumber(), Graphics.FONT_XTINY, precipStr, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(206, 60, Graphics.FONT_XTINY, precipStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        // 10 o'clock (Top Left): Israel Time (e.g. "ISR 10:07")
+        // 10 o'clock Sector (Top-Left): Israel Time (e.g. "ISR 10:07")
         var isrStr = ActivityHistoryHelper.getIsraelTimeString(tzOffset);
-        dc.drawText((cx * 0.56).toNumber(), (cy * 0.30).toNumber(), Graphics.FONT_XTINY, isrStr, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(54, 60, Graphics.FONT_XTINY, isrStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        // 8 o'clock (Bottom Left): Weekly Cycling KM (e.g. "BIKE 9.0")
+        // 8 o'clock Sector (Bottom-Left): Weekly Cycling KM (e.g. "BIKE 9.0")
         var bikeKm = ActivityHistoryHelper.getWeeklyCyclingKm();
         var bikeStr = Lang.format("BIKE $1$", [bikeKm.format("%.1f")]);
-        dc.drawText((cx * 0.54).toNumber(), (cy * 1.62).toNumber(), Graphics.FONT_XTINY, bikeStr, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(54, 200, Graphics.FONT_XTINY, bikeStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        // 6 o'clock (Bottom): Date (e.g. "MON AUG 17")
+        // 6 o'clock Sector (Bottom): Date (e.g. "MON AUG 17")
         var now = Time.now();
         var info = Gregorian.info(now, Time.FORMAT_MEDIUM);
         var dateStr = Lang.format("$1$ $2$ $3$", [info.day_of_week.toUpper(), info.month.toUpper(), info.day]);
-        dc.drawText(cx, (cy * 1.80).toNumber(), Graphics.FONT_XTINY, dateStr, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, 244, Graphics.FONT_XTINY, dateStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        // 4 o'clock (Bottom Right): Weekly Steps (e.g. "STEP 7.3k")
+        // 4 o'clock Sector (Bottom-Right): Weekly Steps (e.g. "STEP 7.3k")
         var weeklySteps = ActivityHistoryHelper.getWeeklySteps();
         var weeklyStepsStr = Lang.format("STEP $1$", [ActivityHistoryHelper.formatStepsShort(weeklySteps)]);
-        dc.drawText((cx * 1.46).toNumber(), (cy * 1.62).toNumber(), Graphics.FONT_XTINY, weeklyStepsStr, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(206, 200, Graphics.FONT_XTINY, weeklyStepsStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 
     // --- 3. Upper Section ---
@@ -149,17 +149,16 @@ class Fenix7WatchFaceView extends WatchUi.WatchFace {
         var minTemp = (owmTempMin != null) ? owmTempMin : 17;
         var maxTemp = (owmTempMax != null) ? owmTempMax : 21;
 
-        // Current Temp (Center, under wind) - Clean FONT_TINY
+        // Current Temp (Center, under wind)
         dc.setColor(colorWhite, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, (cy * 0.23).toNumber(), Graphics.FONT_TINY, curTemp.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, 34, Graphics.FONT_TINY, curTemp.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        var rowY = (cy * 0.49).toNumber();
-        var iconY = rowY - 6;
-        var textY = rowY + 3;
+        var iconY = 56;
+        var textY = 66;
 
-        var colLeftX = (cx * 0.58).toNumber();
+        var colLeftX = 84;
         var colMidX = cx;
-        var colRightX = (cx * 1.42).toNumber();
+        var colRightX = 176;
 
         // Left Column: Elevation + Mountain Icon
         VectorIcons.drawMountain(dc, colLeftX, iconY, colorWhite);
@@ -181,10 +180,8 @@ class Fenix7WatchFaceView extends WatchUi.WatchFace {
         // Vertical Dividers (Grey)
         dc.setColor(colorDarkGray, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(1);
-        var div1X = (cx * 0.79).toNumber();
-        var div2X = (cx * 1.21).toNumber();
-        dc.drawLine(div1X, iconY - 5, div1X, textY + 16);
-        dc.drawLine(div2X, iconY - 5, div2X, textY + 16);
+        dc.drawLine(108, iconY - 4, 108, textY + 14);
+        dc.drawLine(152, iconY - 4, 152, textY + 14);
     }
 
     // --- 4. Center Main Time (Centred Horizontally) ---
@@ -201,7 +198,7 @@ class Fenix7WatchFaceView extends WatchUi.WatchFace {
 
         // Perfectly centered horizontally on the display
         var startX = cx - (totalW / 2);
-        var timeY = (cy * 0.69).toNumber();
+        var timeY = 88;
 
         // Hours: Solid White
         OutlinedFontRenderer.drawSolidTimeText(dc, startX, timeY, font, hourStr, colorWhite, Graphics.TEXT_JUSTIFY_LEFT);
@@ -213,22 +210,19 @@ class Fenix7WatchFaceView extends WatchUi.WatchFace {
         // Seconds in Active Mode - Aligned Right at the 3 o'clock Outer Rim
         if (isAwake) {
             var secStr = clockTime.sec.format("%02d");
-            var secX = (cx * 1.93).toNumber();
-            var secY = cy - 7;
             dc.setColor(colorMetallicTick, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(secX, secY, Graphics.FONT_XTINY, secStr, Graphics.TEXT_JUSTIFY_RIGHT);
+            dc.drawText(234, cy, Graphics.FONT_XTINY, secStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
     }
 
     // --- 5. Lower Section ---
     private function drawLowerSection(dc as Graphics.Dc, cx as Lang.Number, cy as Lang.Number) as Void {
-        var rowY = (cy * 1.20).toNumber();
-        var textY = rowY;
-        var iconY = rowY + 16;
+        var textY = 158;
+        var iconY = 174;
 
-        var colLeftX = (cx * 0.58).toNumber();
+        var colLeftX = 84;
         var colMidX = cx;
-        var colRightX = (cx * 1.42).toNumber();
+        var colRightX = 176;
 
         // Left Column: Weekly Intensity Minutes + Intensity Icon
         var intensityMins = ActivityHistoryHelper.getWeeklyIntensityMinutes();
@@ -253,14 +247,12 @@ class Fenix7WatchFaceView extends WatchUi.WatchFace {
         // Vertical Dividers (Grey)
         dc.setColor(colorDarkGray, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(1);
-        var div1X = (cx * 0.79).toNumber();
-        var div2X = (cx * 1.21).toNumber();
-        dc.drawLine(div1X, textY - 2, div1X, iconY + 8);
-        dc.drawLine(div2X, textY - 2, div2X, iconY + 8);
+        dc.drawLine(108, textY - 2, 108, iconY + 8);
+        dc.drawLine(152, textY - 2, 152, iconY + 8);
 
         // Bottom Center Under Heart Icon: 7-Day Average Resting Heart Rate
         var rhr = ActivityHistoryHelper.get7DayAverageRHR();
-        var rhrY = (cy * 1.46).toNumber();
+        var rhrY = 194;
         dc.setColor(colorWhite, Graphics.COLOR_TRANSPARENT);
         dc.drawText(colMidX, rhrY, Graphics.FONT_XTINY, rhr.toString(), Graphics.TEXT_JUSTIFY_CENTER);
     }
