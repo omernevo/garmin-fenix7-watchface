@@ -4,6 +4,7 @@ import Toybox.Background;
 import Toybox.System;
 import Toybox.Time;
 import Toybox.WatchUi;
+import Toybox.Lang;
 
 (:background)
 class Fenix7WatchFaceApp extends Application.AppBase {
@@ -12,22 +13,21 @@ class Fenix7WatchFaceApp extends Application.AppBase {
         AppBase.initialize();
     }
 
-    function onStart(state as Dictionary?) as Void {
-        // Register background temporal event for OpenWeatherMap if supported
+    function onStart(state as Lang.Dictionary?) as Void {
         if (Toybox.System has :ServiceDelegate) {
             var updateInterval = Storage.getValue("WeatherUpdateInterval");
-            if (updateInterval == null || updateInterval < 5) {
-                updateInterval = 20; // Default 20 minutes
+            if (updateInterval == null || (updateInterval as Lang.Number) < 5) {
+                updateInterval = 20;
             }
             try {
-                Background.registerForTemporalEvent(new Time.Duration(updateInterval * 60));
+                Background.registerForTemporalEvent(new Time.Duration((updateInterval as Lang.Number) * 60));
             } catch (e) {
                 System.println("Temporal event registration exception: " + e.getErrorMessage());
             }
         }
     }
 
-    function onStop(state as Dictionary?) as Void {
+    function onStop(state as Lang.Dictionary?) as Void {
     }
 
     function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
@@ -39,8 +39,8 @@ class Fenix7WatchFaceApp extends Application.AppBase {
     }
 
     function onBackgroundData(data as Application.PersistableType) as Void {
-        if (data instanceof Dictionary) {
-            var weatherData = data as Dictionary;
+        if (data instanceof Lang.Dictionary) {
+            var weatherData = data as Lang.Dictionary;
             if (weatherData.hasKey("temp")) {
                 Storage.setValue("OwmTemp", weatherData.get("temp"));
             }

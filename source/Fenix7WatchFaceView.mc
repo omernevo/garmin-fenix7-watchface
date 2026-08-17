@@ -5,18 +5,17 @@ import Toybox.Time;
 import Toybox.Time.Gregorian;
 import Toybox.Application.Storage;
 import Toybox.Math;
+import Toybox.Lang;
 
 class Fenix7WatchFaceView extends WatchUi.WatchFace {
 
-    private var isAwake as Boolean = true;
+    private var isAwake as Lang.Boolean = true;
     
     // Metallic slate-cyan palette
-    private var colorMetallicCyan as Number = 0x388B9C;
-    private var colorMetallicTick as Number = 0x3EA3B8;
-    private var colorWhite as Number = 0xFFFFFF;
-    private var colorLightGray as Number = 0xAAAAAA;
-    private var colorDarkGray as Number = 0x4A5568;
-    private var colorBlack as Number = 0x000000;
+    private var colorMetallicTick as Lang.Number = 0x3EA3B8;
+    private var colorWhite as Lang.Number = 0xFFFFFF;
+    private var colorDarkGray as Lang.Number = 0x4A5568;
+    private var colorBlack as Lang.Number = 0x000000;
 
     function initialize() {
         WatchFace.initialize();
@@ -65,7 +64,7 @@ class Fenix7WatchFaceView extends WatchUi.WatchFace {
     }
 
     // --- 1. Metallic Divider Ticks at EXACTLY 1, 3, 5, 7, 9, 11 o'clock ---
-    private function drawPerimeterTicks(dc as Graphics.Dc, cx as Number, cy as Number) as Void {
+    private function drawPerimeterTicks(dc as Graphics.Dc, cx as Lang.Number, cy as Lang.Number) as Void {
         dc.setColor(colorMetallicTick, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(4);
 
@@ -87,20 +86,18 @@ class Fenix7WatchFaceView extends WatchUi.WatchFace {
         dc.fillRectangle(cx - rOuter, cy - 2, (rOuter - rInner), 5);
 
         // 3 o'clock position: Right horizontal (90°)
-        // In Rest Mode: Metallic tick bar at the rim
-        // In Active Mode: Seconds digits are rendered here in drawMainTime
         if (!isAwake) {
             dc.fillRectangle(cx + rInner, cy - 2, (rOuter - rInner), 5);
         }
     }
 
     // --- 2. Curved Perimeter Data Fields centered at 12, 2, 4, 6, 8, 10 o'clock ---
-    private function drawPerimeterData(dc as Graphics.Dc, cx as Number, cy as Number) as Void {
-        var owmSpeed = Storage.getValue("OwmWindSpeed") as Number?;
-        var owmDeg = Storage.getValue("OwmWindDeg") as Number?;
-        var pop = Storage.getValue("OwmPop") as Number?;
-        var rain1h = Storage.getValue("OwmRain1h") as Float?;
-        var tzOffset = Storage.getValue("IsraelTimezoneOffset") as Number?;
+    private function drawPerimeterData(dc as Graphics.Dc, cx as Lang.Number, cy as Lang.Number) as Void {
+        var owmSpeed = Storage.getValue("OwmWindSpeed") as Lang.Number?;
+        var owmDeg = Storage.getValue("OwmWindDeg") as Lang.Number?;
+        var pop = Storage.getValue("OwmPop") as Lang.Number?;
+        var rain1h = Storage.getValue("OwmRain1h") as Lang.Float?;
+        var tzOffset = Storage.getValue("IsraelTimezoneOffset") as Lang.Number?;
 
         if (pop == null) { pop = 100; }
         if (rain1h == null) { rain1h = 0.0; }
@@ -108,44 +105,44 @@ class Fenix7WatchFaceView extends WatchUi.WatchFace {
         var rimRadius = (cx * 0.88).toNumber();
 
         // Top half sectors (isBottom = false)
-        // 12 o'clock (0°): Wind (e.g. "13 NW")
+        // 12 o'clock (0°): Wind
         var windStr = ActivityHistoryHelper.getWindString(owmSpeed, owmDeg);
         drawCurvedClockText(dc, windStr, cx, cy, rimRadius, 0.0, Graphics.FONT_TINY, colorWhite, false);
 
-        // 2 o'clock (60°): Precipitation (e.g. "100% 0mm")
+        // 2 o'clock (60°): Precipitation
         var precipStr = Lang.format("$1$% $2$mm", [pop, rain1h.format("%.0f")]);
         drawCurvedClockText(dc, precipStr, cx, cy, rimRadius, 60.0, Graphics.FONT_TINY, colorWhite, false);
 
-        // 10 o'clock (300°): Israel Time (e.g. "ISR 10:07")
+        // 10 o'clock (300°): Israel Time
         var isrStr = ActivityHistoryHelper.getIsraelTimeString(tzOffset);
         drawCurvedClockText(dc, isrStr, cx, cy, rimRadius, 300.0, Graphics.FONT_TINY, colorWhite, false);
 
         // Bottom half sectors (isBottom = true: reads left-to-right right-side-up)
-        // 8 o'clock (240°): Weekly Cycling KM (e.g. "BIKE 9.0")
+        // 8 o'clock (240°): Weekly Cycling KM
         var bikeKm = ActivityHistoryHelper.getWeeklyCyclingKm();
         var bikeStr = Lang.format("BIKE $1$", [bikeKm.format("%.1f")]);
         drawCurvedClockText(dc, bikeStr, cx, cy, rimRadius, 240.0, Graphics.FONT_TINY, colorWhite, true);
 
-        // 6 o'clock (180°): Date (e.g. "MON AUG 17")
+        // 6 o'clock (180°): Date
         var now = Time.now();
         var info = Gregorian.info(now, Time.FORMAT_MEDIUM);
         var dateStr = Lang.format("$1$ $2$ $3$", [info.day_of_week.toUpper(), info.month.toUpper(), info.day]);
         drawCurvedClockText(dc, dateStr, cx, cy, rimRadius, 180.0, Graphics.FONT_TINY, colorWhite, true);
 
-        // 4 o'clock (120°): Weekly Steps (e.g. "STEP 7.3k")
+        // 4 o'clock (120°): Weekly Steps
         var weeklySteps = ActivityHistoryHelper.getWeeklySteps();
         var weeklyStepsStr = Lang.format("STEP $1$", [ActivityHistoryHelper.formatStepsShort(weeklySteps)]);
         drawCurvedClockText(dc, weeklyStepsStr, cx, cy, rimRadius, 120.0, Graphics.FONT_TINY, colorWhite, true);
     }
 
     // High-Precision Clockwise Curved Text Helper (with Left-to-Right Bottom orientation)
-    private function drawCurvedClockText(dc as Graphics.Dc, text as String, cx as Number, cy as Number, radius as Number, clockAngleDeg as Float, font as Graphics.FontDefinition, color as Number, isBottomHalf as Boolean) as Void {
+    private function drawCurvedClockText(dc as Graphics.Dc, text as Lang.String, cx as Lang.Number, cy as Lang.Number, radius as Lang.Number, clockAngleDeg as Lang.Float, font as Graphics.FontDefinition, color as Lang.Number, isBottomHalf as Lang.Boolean) as Void {
         dc.setColor(color, Graphics.COLOR_TRANSPARENT);
         var charArray = text.toCharArray();
         var numChars = charArray.size();
         if (numChars == 0) { return; }
 
-        var charAngularWidth = 0.095; // Radian spread per character
+        var charAngularWidth = 0.095;
         var totalAngle = numChars * charAngularWidth;
         var centerRad = clockAngleDeg * Math.PI / 180.0;
 
@@ -171,14 +168,14 @@ class Fenix7WatchFaceView extends WatchUi.WatchFace {
     }
 
     // --- 3. Upper Section ---
-    private function drawUpperSection(dc as Graphics.Dc, cx as Number, cy as Number) as Void {
-        var owmTemp = Storage.getValue("OwmTemp") as Number?;
-        var owmTempMin = Storage.getValue("OwmTempMin") as Number?;
-        var owmTempMax = Storage.getValue("OwmTempMax") as Number?;
-        var owmSunrise = Storage.getValue("OwmSunrise") as Number?;
-        var owmSunset = Storage.getValue("OwmSunset") as Number?;
-        var lastLat = Storage.getValue("LastLat") as Float?;
-        var lastLon = Storage.getValue("LastLon") as Float?;
+    private function drawUpperSection(dc as Graphics.Dc, cx as Lang.Number, cy as Lang.Number) as Void {
+        var owmTemp = Storage.getValue("OwmTemp") as Lang.Number?;
+        var owmTempMin = Storage.getValue("OwmTempMin") as Lang.Number?;
+        var owmTempMax = Storage.getValue("OwmTempMax") as Lang.Number?;
+        var owmSunrise = Storage.getValue("OwmSunrise") as Lang.Number?;
+        var owmSunset = Storage.getValue("OwmSunset") as Lang.Number?;
+        var lastLat = Storage.getValue("LastLat") as Lang.Float?;
+        var lastLon = Storage.getValue("LastLon") as Lang.Float?;
 
         var curTemp = (owmTemp != null) ? owmTemp : 18;
         var minTemp = (owmTempMin != null) ? owmTempMin : 17;
@@ -211,7 +208,7 @@ class Fenix7WatchFaceView extends WatchUi.WatchFace {
         var sunEvent = SunCalc.getNextSunEvent(lastLat, lastLon, owmSunrise, owmSunset);
         VectorIcons.drawSunHorizon(dc, colRightX, iconY, colorWhite);
         dc.setColor(colorWhite, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(colRightX, textY, Graphics.FONT_SMALL, sunEvent.get(:nextEventTime) as String, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(colRightX, textY, Graphics.FONT_SMALL, sunEvent.get(:nextEventTime) as Lang.String, Graphics.TEXT_JUSTIFY_CENTER);
 
         // Vertical Dividers (Grey)
         dc.setColor(colorDarkGray, Graphics.COLOR_TRANSPARENT);
@@ -223,7 +220,7 @@ class Fenix7WatchFaceView extends WatchUi.WatchFace {
     }
 
     // --- 4. Center Main Time ---
-    private function drawMainTime(dc as Graphics.Dc, cx as Number, cy as Number) as Void {
+    private function drawMainTime(dc as Graphics.Dc, cx as Lang.Number, cy as Lang.Number) as Void {
         var clockTime = System.getClockTime();
         var hourStr = clockTime.hour.format("%02d");
         var minStr = clockTime.min.format("%02d");
@@ -250,7 +247,7 @@ class Fenix7WatchFaceView extends WatchUi.WatchFace {
     }
 
     // --- 5. Lower Section ---
-    private function drawLowerSection(dc as Graphics.Dc, cx as Number, cy as Number) as Void {
+    private function drawLowerSection(dc as Graphics.Dc, cx as Lang.Number, cy as Lang.Number) as Void {
         var rowY = (cy * 1.20).toNumber();
         var textY = rowY;
         var iconY = rowY + 20;

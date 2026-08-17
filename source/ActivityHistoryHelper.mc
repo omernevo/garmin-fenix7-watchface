@@ -8,11 +8,12 @@ import Toybox.UserProfile;
 import Toybox.Application.Storage;
 import Toybox.Weather;
 import Toybox.Math;
+import Toybox.Lang;
 
 class ActivityHistoryHelper {
 
     // 1. Total steps in calendaric week starting Monday
-    static function getWeeklySteps() as Number {
+    static function getWeeklySteps() as Lang.Number {
         var todaySteps = 0;
         var actInfo = ActivityMonitor.getInfo();
         if (actInfo != null && actInfo.steps != null) {
@@ -21,10 +22,9 @@ class ActivityHistoryHelper {
 
         var now = Time.now();
         var info = Gregorian.info(now, Time.FORMAT_SHORT);
-        // Gregorian day_of_week: 1=Sunday, 2=Monday, ..., 7=Saturday
         var daysSinceMonday = 0;
         if (info.day_of_week == 1) {
-            daysSinceMonday = 6; // Sunday is 6 days after Monday
+            daysSinceMonday = 6;
         } else {
             daysSinceMonday = info.day_of_week - 2;
         }
@@ -46,8 +46,8 @@ class ActivityHistoryHelper {
         return totalSteps;
     }
 
-    // Formats step count as e.g. "7.3k" or "12.4k" or "850"
-    static function formatStepsShort(steps as Number) as String {
+    // Formats step count as e.g. "7.3k" or "850"
+    static function formatStepsShort(steps as Lang.Number) as Lang.String {
         if (steps >= 1000) {
             var kValue = steps / 1000.0;
             return Lang.format("$1$k", [kValue.format("%.1f")]);
@@ -56,17 +56,16 @@ class ActivityHistoryHelper {
     }
 
     // 2. Cycling distance (KM) this calendaric week starting Monday
-    static function getWeeklyCyclingKm() as Float {
-        // Retrieve persisted weekly cycling distance or default
+    static function getWeeklyCyclingKm() as Lang.Float {
         var bikeKm = Storage.getValue("WeeklyBikeKm");
         if (bikeKm != null) {
-            return bikeKm.toFloat();
+            return (bikeKm as Lang.Number or Lang.Float).toFloat();
         }
-        return 9.0; // Default sample value matching template
+        return 9.0;
     }
 
     // 3. Weekly intensity minutes starting Monday
-    static function getWeeklyIntensityMinutes() as Number {
+    static function getWeeklyIntensityMinutes() as Lang.Number {
         var actInfo = ActivityMonitor.getInfo();
         if (actInfo != null && actInfo has :activeMinutesWeek && actInfo.activeMinutesWeek != null) {
             if (actInfo.activeMinutesWeek has :total && actInfo.activeMinutesWeek.total != null) {
@@ -78,15 +77,15 @@ class ActivityHistoryHelper {
                 return actInfo.activeMinutesDay.total;
             }
         }
-        return 35; // Template sample fallback
+        return 35;
     }
 
     // 4. Current Heart Rate
-    static function getCurrentHeartRate() as Number {
+    static function getCurrentHeartRate() as Lang.Number {
         var heartRate = null;
-        var actInfo = ActivityMonitor.getInfo();
-        if (actInfo != null && actInfo.heartRate != null && actInfo.heartRate != ActivityMonitor.INVALID_HR_SAMPLE) {
-            heartRate = actInfo.heartRate;
+        var actInfo = Activity.getActivityInfo();
+        if (actInfo != null && actInfo.currentHeartRate != null) {
+            heartRate = actInfo.currentHeartRate;
         }
 
         if (heartRate == null && (Toybox has :SensorHistory) && (SensorHistory has :getHeartRateHistory)) {
@@ -103,7 +102,7 @@ class ActivityHistoryHelper {
     }
 
     // 5. 7-Day Average Resting Heart Rate
-    static function get7DayAverageRHR() as Number {
+    static function get7DayAverageRHR() as Lang.Number {
         var rhr = null;
         if (Toybox has :UserProfile && UserProfile has :getProfile) {
             var profile = UserProfile.getProfile();
@@ -135,7 +134,7 @@ class ActivityHistoryHelper {
     }
 
     // 6. Current Elevation in meters
-    static function getCurrentElevation() as Number {
+    static function getCurrentElevation() as Lang.Number {
         var actInfo = Activity.getActivityInfo();
         if (actInfo != null && actInfo.altitude != null) {
             return actInfo.altitude.toNumber();
@@ -155,7 +154,7 @@ class ActivityHistoryHelper {
     }
 
     // 7. Time in Israel (UTC+2 or UTC+3 DST)
-    static function getIsraelTimeString(tzOffsetHours as Number?) as String {
+    static function getIsraelTimeString(tzOffsetHours as Lang.Number?) as Lang.String {
         var now = Time.now();
         var utc = Gregorian.utcInfo(now, Time.FORMAT_SHORT);
 
@@ -169,8 +168,7 @@ class ActivityHistoryHelper {
     }
 
     // 8. Wind speed and direction string
-    static function getWindString(owmSpeed as Number?, owmDeg as Number?) as String {
-        // Try Garmin Weather
+    static function getWindString(owmSpeed as Lang.Number?, owmDeg as Lang.Number?) as Lang.String {
         if (Toybox has :Weather && Weather has :getCurrentConditions) {
             var cond = Weather.getCurrentConditions();
             if (cond != null && cond.windSpeed != null && cond.windBearing != null) {
@@ -180,7 +178,6 @@ class ActivityHistoryHelper {
             }
         }
 
-        // Fallback to OWM data
         if (owmSpeed != null && owmDeg != null) {
             var dirStr = degreesToCompass(owmDeg);
             return Lang.format("$1$ $2$", [owmSpeed, dirStr]);
@@ -189,7 +186,7 @@ class ActivityHistoryHelper {
         return "13 NW";
     }
 
-    static function degreesToCompass(deg as Number) as String {
+    static function degreesToCompass(deg as Lang.Number) as Lang.String {
         var sectors = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
         var idx = (((deg + 11.25) / 22.5).toNumber()) % 16;
         return sectors[idx];
